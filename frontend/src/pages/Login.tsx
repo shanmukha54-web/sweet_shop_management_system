@@ -1,40 +1,68 @@
-import React, { useState } from 'react';
-import { apiFetch } from '../api';
+import React, { useState } from "react";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Paper,
+} from "@mui/material";
+import api from "../api";
 
-export default function Login({ onLogin }: { onLogin: (token: string, role?: string) => void }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [err, setErr] = useState('');
+const Login: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  async function submit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || 'Login failed');
-      // Token returned
-      const token = json.token;
-      // decode role from token payload (quick and dirty)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      onLogin(token, payload.role);
-    } catch (e: any) {
-      setErr(e.message);
+      const res = await api.post("/auth/login", { email, password });
+      localStorage.setItem("token", res.data.token);
+      window.location.href = "/dashboard";
+    } catch {
+      setError("Invalid email or password");
     }
-  }
+  };
 
   return (
-    <div className="card">
-      <h3>Login</h3>
-      <form onSubmit={submit}>
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-        <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" />
-        <button type="submit">Login</button>
-      </form>
-      {err && <p className="error">{err}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+        <Typography variant="h5" gutterBottom align="center">
+          🍬 Sweet Shop Login
+        </Typography>
+        {error && <Typography color="error">{error}</Typography>}
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button variant="contained" type="submit" fullWidth sx={{ mt: 2 }}>
+            Login
+          </Button>
+          <Button
+            fullWidth
+            sx={{ mt: 1 }}
+            onClick={() => (window.location.href = "/register")}
+          >
+            Register
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
-}
+};
+
+export default Login;

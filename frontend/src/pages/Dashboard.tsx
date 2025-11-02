@@ -1,63 +1,88 @@
-import React, { useEffect, useState } from 'react';
-import SweetCard from '../components/SweetCard';
-import AdminPanel from '../components/AdminPanel';
+import React, { useEffect, useState, ChangeEvent } from "react";
+import { Container, Typography, Button, TextField, Box, Grid } from "@mui/material";
+import api from "../api";
+import SweetCard from "../components/sweetcard";
+import { useCart, Sweet as SweetType } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
-export default function Dashboard({ token, onLogout, isAdmin }: { token: string; onLogout: () => void; isAdmin: boolean }) {
-  const [sweets, setSweets] = useState<any[]>([]);
-  const [q, setQ] = useState('');
-
-  async function load() {
-    const res = await fetch('http://localhost:4000/api/sweets', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const json = await res.json();
-    setSweets(json);
-  }
+const Dashboard: React.FC = () => {
+  const [sweets, setSweets] = useState<SweetType[]>([]);
+  const [filteredSweets, setFilteredSweets] = useState<SweetType[]>([]);
+  const [search, setSearch] = useState("");
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    load();
+    const fetchSweets = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const resp = await api.get("/sweets", { headers: { Authorization: `Bearer ${token}` } });
+        setSweets(resp.data);
+        setFilteredSweets(resp.data);
+      } catch (err) {
+        console.error("Error fetching sweets:", err);
+      }
+    };
+    fetchSweets();
   }, []);
 
-  async function handlePurchase(id: number) {
-    await fetch(`http://localhost:4000/api/sweets/${id}/purchase`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ quantity: 1 }),
-    });
-    load();
-  }
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    setSearch(value);
+    setFilteredSweets(
+      sweets.filter(
+        s => s.name.toLowerCase().includes(value) || s.category.toLowerCase().includes(value)
+      )
+    );
+  };
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch(`http://localhost:4000/api/sweets/search?q=${encodeURIComponent(q)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const json = await res.json();
-    setSweets(json);
-  }
+  const handleReset = () => {
+    setSearch("");
+    setFilteredSweets(sweets);
+  };
 
   return (
-    <div className="container">
-      <header>
-        <h2>Sweet Shop</h2>
-        <div>
-          <button onClick={onLogout}>Logout</button>
-        </div>
-      </header>
+    <Container sx={{ mt: 4 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4" align="center" sx={{ flex: 1 }}>
+          🍬 Sweet Shop
+        </Typography>
 
-      <form onSubmit={handleSearch} className="search">
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by name or category" />
-        <button type="submit">Search</button>
-        <button type="button" onClick={load}>Reset</button>
-      </form>
+        <Button variant="outlined" onClick={() => navigate("/cart")} sx={{ ml: 2 }}>
+          View Cart
+        </Button>
+      </Box>
 
-      {isAdmin && <AdminPanel token={token} refresh={load} />}
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+        <TextField
+          label="Search by name or category"
+          variant="outlined"
+          value={search}
+          onChange={handleSearchChange}
+          sx={{ width: "50%", mr: 2 }}
+        />
+        <Button variant="contained" color="primary" onClick={handleReset}>
+          Reset
+        </Button>
+      </Box>
 
-      <div className="grid">
-        {sweets.map(s => (
-          <SweetCard key={s.id} sweet={s} onPurchase={() => handlePurchase(s.id)} />
-        ))}
-      </div>
-    </div>
+      <Grid container spacing={3}>
+        {filteredSweets.length > 0 ? (
+          filteredSweets.map(sweet => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={sweet.id}>
+              <SweetCard sweet={sweet} onAddToCart={addToCart} />
+            </Grid>
+          ))
+        ) : (
+          <Grid item xs={12}>
+            <Typography align="center" color="text.secondary">
+              No sweets found. Try searching or add sweets from backend.
+            </Typography>
+          </Grid>
+        )}
+      </Grid>
+    </Container>
   );
-}
+};
+
+export default Dashboard;

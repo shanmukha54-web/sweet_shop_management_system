@@ -50,3 +50,4 @@ export async function restockSweet(req: Request, res: Response) {
   const result = await sweetsService.restockSweet(id, Number(quantity || 0), req.user);
   res.json(result);
 }
+

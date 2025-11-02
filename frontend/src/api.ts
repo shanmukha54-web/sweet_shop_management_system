@@ -1,13 +1,13 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
+import axios from "axios";
 
-export async function apiFetch(path: string, token?: string, opts: RequestInit = {}) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(opts.headers as Record<string,string> || {}) };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+});
 
-  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json.message || 'API error');
-  }
-  return json;
-}
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export default api;

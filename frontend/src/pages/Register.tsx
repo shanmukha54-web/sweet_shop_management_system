@@ -1,37 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Paper,
+} from "@mui/material";
+import api from "../api";
 
-export default function Register() {
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
-  const [name, setName] = useState('');
-  const [msg, setMsg] = useState('');
-  async function submit(e: React.FormEvent) {
+const Register: React.FC = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass, name }),
-      });
-      if (!res.ok) {
-        const j = await res.json();
-        throw new Error(j.message || 'Register failed');
-      }
-      setMsg('Registered! Now login.');
-    } catch (err: any) {
-      setMsg(err.message);
+      await api.post("/auth/register", { name, email, password, role: "USER" });
+      setMessage("✅ Registered successfully! You can now log in.");
+    } catch {
+      setMessage("❌ Registration failed");
     }
-  }
+  };
+
   return (
-    <div className="card">
-      <h3>Register</h3>
-      <form onSubmit={submit}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-        <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Password" />
-        <button type="submit">Register</button>
-      </form>
-      {msg && <p>{msg}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+        <Typography variant="h5" gutterBottom align="center">
+          🧁 Sweet Shop Register
+        </Typography>
+        {message && (
+          <Typography
+            color={message.includes("failed") ? "error" : "primary"}
+            sx={{ textAlign: "center", mb: 1 }}
+          >
+            {message}
+          </Typography>
+        )}
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            label="Name"
+            fullWidth
+            margin="normal"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button variant="contained" type="submit" fullWidth sx={{ mt: 2 }}>
+            Register
+          </Button>
+          <Button
+            fullWidth
+            sx={{ mt: 1 }}
+            onClick={() => (window.location.href = "/")}
+          >
+            Back to Login
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
-}
+};
+
+export default Register;
