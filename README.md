@@ -83,7 +83,7 @@ This project demonstrates a production-ready **full-stack application** built us
 ### Backend
 - **Framework:** Express.js (Node.js)
 - **Language:** TypeScript  
-- **Database:** MongoDB (Mongoose ORM)  
+- **Database:** PostgreSQL (local or Docker)
 - **Authentication:** JWT  
 - **Validation:** Express Validator  
 - **Testing:** Jest / Supertest  
@@ -156,7 +156,7 @@ sweet_shop_management_system/
 
 ### Prerequisites
 - Node.js 18+  
-- MongoDB (local or Atlas)  
+- PostgreSQL
 - npm  
 - Git  
 
@@ -170,13 +170,20 @@ cd backend
 npm install
 
 2️⃣ Configure .env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/sweetshop
+PORT=4000
+DATABASE_URL="postgresql://postgres:sweetpass@localhost:5432/sweetshop"
 JWT_SECRET=mysecretkey
 
-3️⃣ Run backend
+3️⃣ Run PostgreSQL (via Docker)
+If you don’t already have a PostgreSQL instance running:
+docker run --name postgres_sweet -e POSTGRES_PASSWORD=sweetpass -e POSTGRES_DB=sweetshop -p 5432:5432 -d postgres
+
+4️⃣ Run Prisma migrations
+npx prisma migrate dev --name init
+
+5️⃣ Run backend
 npm run dev
-✅ Backend runs at: http://localhost:5000
+✅ Backend runs at: http://localhost:4000
 
 ⚛️ Frontend Setup
 1️⃣ Install dependencies
@@ -257,7 +264,7 @@ CORS error
 	•	Update CORS in server.ts backend
 
 Database connection error
-	•	Check MongoDB is running locally or via Atlas
+	•	Check PostgreSQL is running locally or via Atlas
 
 ⸻
 
@@ -266,7 +273,7 @@ Database connection error
 	•	React with TypeScript Docs￼
 	•	Material UI v7￼
 	•	JWT.io￼
-	•	MongoDB Docs￼
+	•	PostgreSQL docs
 
 ⸻
 
